@@ -2,16 +2,17 @@ import Phaser from "phaser";
 import table from "../../assets/images/table.png";
 import paddle from "../../assets/images/paddle.png";
 import ball from "../../assets/images/ball.png";
+import restartButton from "../../assets/images/restartButton.png";
 
 export default class TitleScreen extends Phaser.Scene
 {
-    ballScale = 0.1;
-    paddleScale = 0.2;
-    ballspeed = 300;
+    ballScale = 0.19;
+    paddleScale = 0.4;
+    ballspeed = 1500;
     bounds = 100;
-    textSize = 30;
-    leftScore = 0;
-    rightScore = 0;
+    textSize = 65;
+    leftScore = 9;
+    rightScore = 9;
     h = 0;
     w = 0;
     constructor()
@@ -26,6 +27,7 @@ export default class TitleScreen extends Phaser.Scene
         this.load.image('table', table);
         this.load.image('ball', ball);
         this.load.image('paddle', paddle);
+        this.load.image('restart', restartButton);
     }
     
     create()
@@ -72,9 +74,9 @@ export default class TitleScreen extends Phaser.Scene
             align: "center"
         });
 
-        this.restart = this.add.text(this.w / 2 - 65, this.h / 2, "", {
+        this.restart = this.add.text(this.w / 2 - this.textSize, this.h / 2, "", {
             font: this.textSize + "px Arial",
-            fill: "#FFFFFF",
+            fill: "#000000",
             align: "center"
         });
     }
@@ -82,22 +84,32 @@ export default class TitleScreen extends Phaser.Scene
     resetball()
     {
         this.ball.setPosition(this.w / 2, this.h / 2)
-        const angle = Phaser.Math.Between(100, 360);
+        const angle = Phaser.Math.Between(200, 360);
         const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
         this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
     }
 
     winner(msg)
     {
+        this.ball.body.stop();
+        this.input.keyboard.enabled = false;
         this.restart.text = msg.toString();
+        var sprite = this.add.sprite(this.w/2, this.h/2, 'restart').setInteractive();
+        sprite.on('pointerdown', (event) =>
+        {
+            this.input.keyboard.enabled = true;
+            this.leftScore = 0;
+            this.rightScore = 0;
+            this.scene.restart();
+        });
     }
 
     update ()
     {
         if (this.rightScore >= 10)
-            this.winner("you lose!!");
+            this.winner("");
         else if (this.leftScore >= 10)
-            this.winner("you win!!");
+            this.winner("");
     
         if (this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
         {
