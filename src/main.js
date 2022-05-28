@@ -2,8 +2,8 @@
 import Phaser from "phaser"
 import TitleScreen from "./scenes/TitleScreen"
 var config = {
-    width: 800,
-    height: 600,
+    width: 1920,
+    height: 1080,
     type: Phaser.AUTO,
     physics: {
         default: 'arcade',
@@ -17,6 +17,7 @@ var config = {
 const game = new Phaser.Game(config)
 game.scene.add("titlescreen", TitleScreen)
 game.scene.start("titlescreen")
+
 // const ballScale = 0.1;
 // const paddleScale = 0.2;
 // const ballspeed = 600;

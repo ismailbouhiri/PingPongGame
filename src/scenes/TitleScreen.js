@@ -1,5 +1,7 @@
 import Phaser from "phaser";
-
+import table from "../../assets/images/table.png";
+import paddle from "../../assets/images/paddle.png";
+import ball from "../../assets/images/ball.png";
 
 export default class TitleScreen extends Phaser.Scene
 {
@@ -12,22 +14,27 @@ export default class TitleScreen extends Phaser.Scene
     rightScore = 0;
     h = 0;
     w = 0;
+    constructor()
+    {
+        super();
+    }
 
     preload ()
     {
         this.h = this.cameras.main.height;
         this.w = this.cameras.main.width;
-        this.load.image('table', '../../assets/images/table.png');
-        // this.load.image('ball', '../../assets/images/ball.png');
-        // this.load.image('paddle', '../../assets/images/paddle.png');
+        this.load.image('table', table);
+        this.load.image('ball', ball);
+        this.load.image('paddle', paddle);
     }
     
     create()
     {
-        // resize the images to fit the window 
+        // resize the images to fit the window
+        
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
-
-        // // // no collision detection on left side and right side 
+        // console.log(this.bg);
+        // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
         // // loading a ball add sprite to the 
