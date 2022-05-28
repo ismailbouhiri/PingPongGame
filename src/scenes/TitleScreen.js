@@ -3,12 +3,14 @@ import table from "../../assets/images/table.png";
 import paddle from "../../assets/images/paddle.png";
 import ball from "../../assets/images/ball.png";
 import restartButton from "../../assets/images/restartButton.png";
+import youlose from "../../assets/images/youlose.png";
+import youwin from "../../assets/images/youwin.png";
 
 export default class TitleScreen extends Phaser.Scene
 {
     ballScale = 0.19;
     paddleScale = 0.4;
-    ballspeed = 1500;
+    ballspeed = 900;
     bounds = 100;
     textSize = 65;
     leftScore = 9;
@@ -28,6 +30,8 @@ export default class TitleScreen extends Phaser.Scene
         this.load.image('ball', ball);
         this.load.image('paddle', paddle);
         this.load.image('restart', restartButton);
+        this.load.image('youwin', youwin);
+        this.load.image('youlose', youlose);
     }
     
     create()
@@ -73,12 +77,6 @@ export default class TitleScreen extends Phaser.Scene
             fill: "#FFFFFF",
             align: "center"
         });
-
-        this.restart = this.add.text(this.w / 2 - this.textSize, this.h / 2, "", {
-            font: this.textSize + "px Arial",
-            fill: "#000000",
-            align: "center"
-        });
     }
 
     resetball()
@@ -89,11 +87,10 @@ export default class TitleScreen extends Phaser.Scene
         this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
     }
 
-    winner(msg)
+    winner(img)
     {
         this.ball.body.stop();
         this.input.keyboard.enabled = false;
-        this.restart.text = msg.toString();
         var sprite = this.add.sprite(this.w/2, this.h/2, 'restart').setInteractive();
         sprite.on('pointerdown', (event) =>
         {
@@ -102,14 +99,15 @@ export default class TitleScreen extends Phaser.Scene
             this.rightScore = 0;
             this.scene.restart();
         });
+        this.add.sprite(this.w/2, this.h/2 - sprite.height, img.toString());
     }
 
     update ()
     {
         if (this.rightScore >= 10)
-            this.winner("");
+            this.winner("youlose");
         else if (this.leftScore >= 10)
-            this.winner("");
+            this.winner("youwin");
     
         if (this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
         {

@@ -1,6 +1,44 @@
 // import "../assets/Phaser/phaser.min.js"
 import Phaser from "phaser"
 import TitleScreen from "./scenes/TitleScreen"
+
+
+// function resize() {
+//     var canvas = document.querySelector("canvas");
+//     var windowWidth = window.innerWidth;
+//     var windowHeight = window.innerHeight;
+//     var windowRatio = windowWidth / windowHeight;
+//     var gameRatio = game.config.width / game.config.height;
+//     if(windowRatio < gameRatio){
+//         canvas.style.width = windowWidth + "px";
+//         canvas.style.height = (windowWidth / gameRatio) + "px";
+//     }
+//     else{
+//         canvas.style.width = (windowHeight * gameRatio) + "px";
+//         canvas.style.height = windowHeight + "px";
+//     }
+// }
+
+// window.onload = function(){
+//     var gameConfig = {
+//         type: Phaser.canvas,
+//         width: game.gameWidth,
+//         height: game.gameHeight,
+//         physics: {
+//             default: 'arcade',
+//             arcade: {
+//                 gravity: { y: 0 },
+//                 debug: false
+//             }
+//         }
+//     };
+//     var game = new Phaser.Game(gameConfig);
+//     resize();
+//     window.addEventListener("resize", resize, false);
+//     game.scene.add("titlescreen", TitleScreen)
+//     game.scene.start("titlescreen")
+// }
+
 var config = {
     width: 1920,
     height: 1080,
