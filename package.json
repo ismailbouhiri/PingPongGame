@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "http-server -p 8000"
+    "start": "parcel ./src/index.html -p 8000"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/ismailbouhiri/PingPongGame#readme",
   "dependencies": {
-    "http-server": "^14.1.0",
+    "parcel": "^2.6.0",
     "phaser": "^3.55.2"
   }
 }
