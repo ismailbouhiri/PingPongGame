@@ -10,7 +10,7 @@ export default class TitleScreen extends Phaser.Scene
 {
     ballScale = 0.19;
     paddleScale = 0.4;
-    ballspeed = 900;
+    ballspeed = 1500;
     bounds = 100;
     textSize = 65;
     leftScore = 9;
@@ -79,9 +79,10 @@ export default class TitleScreen extends Phaser.Scene
     resetball()
     {
         this.ball.setPosition(this.w / 2, this.h / 2)
-        const angle = Phaser.Math.Between(200, 360);
-        const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
-        this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
+        //const angle = Phaser.Math.Between(200, 200);
+        //const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
+        //console.log(vec);//
+        this.ball.body.setVelocity(360, this.ballspeed); // set the velocity to the ball
     }
 
     winner(img)
@@ -101,6 +102,8 @@ export default class TitleScreen extends Phaser.Scene
 
     update ()
     {
+        this.ballspeed += 0.3;
+        this.ball.body.velocity.normalize().scale(this.ballspeed);
         if (this.rightScore >= 10)
             this.winner("youlose");
         else if (this.leftScore >= 10)
