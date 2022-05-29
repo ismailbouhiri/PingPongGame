@@ -36,13 +36,13 @@ export default class TitleScreen extends Phaser.Scene
     
     create()
     {
-        // resize the images to fit the window
-        
-        this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
-        // console.log(this.bg);
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
+        
+        // resize the images to fit the window
+        this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
+
         // // loading a ball add sprite to the 
         this.ball = this.physics.add.sprite(this.w / 2, this.h / 2, 'ball');
         this.ball.setScale(this.ballScale); // scale the sprit 
@@ -52,9 +52,6 @@ export default class TitleScreen extends Phaser.Scene
         
         // add the paddle 
         this.paddle = this.add.sprite(30, ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
-        // console.log(this.bg);
-        // console.log(this.paddle);
-        // console.log(this.ball);
         this.paddle.setScale(this.paddleScale); // scale the sprit
         this.physics.add.existing(this.paddle, true); // set the physicss to paddle !!
         this.physics.add.collider(this.paddle, this.ball); // set the collider with paddle and the ball 
