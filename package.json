@@ -19,6 +19,7 @@
   "homepage": "https://github.com/ismailbouhiri/PingPongGame#readme",
   "dependencies": {
     "parcel": "^2.6.0",
-    "phaser": "^3.55.2"
+    "phaser": "^3.55.2",
+    "typescript": "^4.7.2"
   }
 }
