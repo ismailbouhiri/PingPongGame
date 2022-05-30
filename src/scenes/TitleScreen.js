@@ -10,11 +10,11 @@ export default class TitleScreen extends Phaser.Scene
 {
     ballScale = 0.19;
     paddleScale = 0.4;
-    ballspeed = 1500;
+    ballspeed = 600;
     bounds = 100;
     textSize = 65;
-    leftScore = 9;
-    rightScore = 9;
+    leftScore = 0;
+    rightScore = 0;
     h = 0;
     w = 0;
     constructor()
@@ -41,7 +41,7 @@ export default class TitleScreen extends Phaser.Scene
         
         
         // resize the images to fit the window
-        this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
+        this.bg = this.add.sprite(0, 0, 'table').setOrigin(0, 0);
 
         // // loading a ball add sprite to the 
         this.ball = this.physics.add.sprite(this.w / 2, this.h / 2, 'ball');
@@ -79,10 +79,10 @@ export default class TitleScreen extends Phaser.Scene
     resetball()
     {
         this.ball.setPosition(this.w / 2, this.h / 2)
-        //const angle = Phaser.Math.Between(200, 200);
-        //const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
-        //console.log(vec);//
-        this.ball.body.setVelocity(360, this.ballspeed); // set the velocity to the ball
+        const angle = Phaser.Math.Between(400, 1000);
+        // const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
+        // console.log(vec);//
+        this.ball.body.setVelocity(angle, this.ballspeed); // set the velocity to the ball
     }
 
     winner(img)
@@ -102,7 +102,7 @@ export default class TitleScreen extends Phaser.Scene
 
     update ()
     {
-        this.ballspeed += 0.3;
+        this.ballspeed += 0.5;
         this.ball.body.velocity.normalize().scale(this.ballspeed);
         if (this.rightScore >= 10)
             this.winner("youlose");
