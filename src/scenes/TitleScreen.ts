@@ -19,6 +19,7 @@ export default class TitleScreen extends Phaser.Scene
     bg: Phaser.GameObjects.Sprite;
     ball: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     paddle: Phaser.GameObjects.Sprite;
+    enemy: Phaser.GameObjects.Sprite;
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     leftScoretxt: Phaser.GameObjects.Text;
     rightScoretxt: Phaser.GameObjects.Text;
@@ -59,6 +60,12 @@ export default class TitleScreen extends Phaser.Scene
         this.physics.add.existing(this.paddle, true); // set the physicss to paddle !!
         this.physics.add.collider(this.paddle, this.ball); // set the collider with paddle and the ball 
         
+        // enemie paddle
+        // this.enemy = this.add.sprite((this.w - (this.paddle.width *this.paddleScale) - 30) , ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+        // this.enemy.setScale(this.paddleScale); // scale the sprit
+        // this.physics.add.existing(this.enemy, true); // set the physicss to paddle !!
+        // this.physics.add.collider(this.enemy, this.ball); // set the collider with paddle and the ball 
+
         // movement ball
         this.resetball(); 
         
