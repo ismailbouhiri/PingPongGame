@@ -1,4 +1,3 @@
-// import "../assets/Phaser/phaser.min.js"
 import Phaser from "phaser"
 import TitleScreen from "./scenes/TitleScreen"
 
