@@ -1,3 +1,4 @@
+import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
 import table from "../../assets/images/table.png";
 import paddle from "../../assets/images/paddle.png";
@@ -41,11 +42,13 @@ export default class TitleScreen extends Phaser.Scene
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
-        
+        // const ser = http.createServer()
+        const socket = io("http://localhost:3000");
+        console.log(socket);
+
+        // io
         // resize the images to fit the window
-        console.log("herrre");
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
-        console.log("herrre1");
 
         // loading a ball add sprite to the 
         this.ball = this.physics.add.sprite(this.w / 2, this.h / 2, 'ball');
@@ -176,3 +179,4 @@ export default class TitleScreen extends Phaser.Scene
         }
     }
 }
+
