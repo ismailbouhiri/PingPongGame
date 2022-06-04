@@ -43,10 +43,11 @@ export default class TitleScreen extends Phaser.Scene
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
         // const ser = http.createServer()
-        const socket = io("http://localhost:3000");
+        const socket = io("http://127.0.0.1:3000/");
         console.log(socket);
 
-        // io
+        socket.emit('server', "hello test connection");
+
         // resize the images to fit the window
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
 
@@ -101,7 +102,7 @@ export default class TitleScreen extends Phaser.Scene
         this.ball.body.stop();
         this.input.keyboard.enabled = false;
         var sprite = this.add.sprite(this.w/2, this.h/2, 'restart').setInteractive();
-        sprite.on('pointerdown', (event) =>
+        sprite.on('pointerdown', () =>
         {
             this.input.keyboard.enabled = true;
             this.leftScore = 0;
