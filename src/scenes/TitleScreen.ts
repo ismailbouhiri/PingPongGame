@@ -24,6 +24,7 @@ export default class TitleScreen extends Phaser.Scene
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     leftScoretxt: Phaser.GameObjects.Text;
     rightScoretxt: Phaser.GameObjects.Text;
+    roomId: string = "";
 
     preload () : void
     {
@@ -43,14 +44,12 @@ export default class TitleScreen extends Phaser.Scene
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
         // const ser = http.createServer()
-        const socket = io("http://127.0.0.1:3000/");
-        console.log(socket);
+        const socket = io("http://127.0.0.1:3001/game", {withCredentials: true});
 
-        socket.emit('server', "hello test connection");
-
+        
         // resize the images to fit the window
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
-
+        
         // loading a ball add sprite to the 
         this.ball = this.physics.add.sprite(this.w / 2, this.h / 2, 'ball');
         this.ball.setScale(this.ballScale); // scale the sprit 
@@ -69,23 +68,46 @@ export default class TitleScreen extends Phaser.Scene
         // this.enemy.setScale(this.paddleScale); // scale the sprit
         // this.physics.add.existing(this.enemy, true); // set the physicss to paddle !!
         // this.physics.add.collider(this.enemy, this.ball); // set the collider with paddle and the ball 
-
+        
         // movement ball
         this.resetball(); 
         
         // get the input from the user using "phaser-user-input-system"
         this.cursors = this.input.keyboard.createCursorKeys();
-
+        
         /////////////////////////////// text ////////////////////////
         this.leftScoretxt = this.add.text((this.w / 2) - (this.w / 10) , 30, this.leftScore.toString(), {
             font: this.textSize + "px Arial",
             align: "center"
         });
-
+        
         this.rightScoretxt = this.add.text((this.w / 2) + (this.w / 10) , 30, this.rightScore.toString(), {
             font: this.textSize + "px Arial",
             align: "center"
         });
+        
+        socket.on("startGame", ( room) => {
+            console.log("game start on !!!");
+            this.roomId = room;
+            this.createEnemy();
+            this.input.keyboard.enabled = true;
+            this.ball.setBounce(1, 1); // set the bounce effect to the ball 
+            this.ball.setCollideWorldBounds(true, 1, 1); // set the bounce with world 
+            // this.scene.start();
+        });
+
+        if (this.roomId == "")
+        {
+            this.ball.body.stop();
+            this.input.keyboard.enabled = false;
+        }
+    }
+    createEnemy() : void
+    {
+        this.enemy = this.add.sprite((this.w - (this.paddle.width * this.paddleScale) - 30) , ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+        this.enemy.setScale(this.paddleScale); // scale the sprit
+        this.physics.add.existing(this.enemy, true); // set the physicss to paddle !!
+        this.physics.add.collider(this.enemy, this.ball);
     }
 
     resetball()  : void
