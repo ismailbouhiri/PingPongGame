@@ -134,6 +134,12 @@ export default class TitleScreen extends Phaser.Scene
         this.resetball();
     }
 
+    // updateScore(data: any) : void
+    // {
+    //     this.rightScoretxt.text = (this.rightScore != data.rscore) ? data.rscore.toString() :this.rightScoretxt.text;
+    //     this.leftScoretxt.text = (this.leftScore != data.lscore) ? data.lscore.toString() :this.leftScoretxt.text;
+    // }
+
     winner(img: string) : void
     {
         this.ball.body.stop();
@@ -151,13 +157,13 @@ export default class TitleScreen extends Phaser.Scene
 
     update () : void
     {
-        if (this.rightScore >= 10)
-            this.winner("youlose");
-        else if (this.leftScore >= 10)
-            this.winner("youwin");
+        if (this.rightScore >= 10 || this.leftScore >= 10)
+        {
+            const msg: string = (this.leftScore >= 10 && this.admin) ? "youwin" : "youlose";
+            this.winner(msg);
+        }
         if (this.cursors && this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
         {
-            console.log(this.admin);
             this.paddle.y -= 10;
             if('updateFromGameObject' in this.paddle.body) {
                 this.paddle.body.updateFromGameObject();
@@ -172,7 +178,7 @@ export default class TitleScreen extends Phaser.Scene
                 this.paddle.body.updateFromGameObject();
             }
         }
-        if (this.ball && this.ball.x < 0)
+        if (this.admin && this.ball && this.ball.x < 0)
         {
             /// add score to left user
             /******************* update the position of the paddle ************************/
@@ -192,7 +198,7 @@ export default class TitleScreen extends Phaser.Scene
             /******************************************************************************/
     
         }
-        else if (this.ball && this.ball.x > this.w)
+        else if (this.admin && this.ball && this.ball.x > this.w)
         {
             /// add score to right user
     
@@ -219,16 +225,25 @@ export default class TitleScreen extends Phaser.Scene
                 paddleY: this.paddle.y,
                 ballx: this.ball.body.x,
                 bally: this.ball.body.y,
+                lscore: this.leftScore,
+                rscore: this.rightScore,
             });
-
         }
-        this.socket.on('recv', (data: any ) => {
+
+        this.socket.on('recv', (data: any ) => {            
             this.enemy.y = data.paddleY;
             if('updateFromGameObject' in this.enemy.body) {
                 this.enemy.body.updateFromGameObject();
             }
-            this.ball.x = (this.ball && !this.admin) ? data.ballx : this.ball.x;
-            this.ball.y = (this.ball && !this.admin) ? data.bally : this.ball.y;
+            this.ball.x = (!this.admin) ? data.ballx : this.ball.x;
+            this.ball.y = (!this.admin) ? data.bally : this.ball.y;
+            if (!this.admin)
+            {
+                this.rightScoretxt.text = data.rscore.toString();
+                this.leftScoretxt.text = data.lscore.toString();
+                this.leftScore = data.lscore;
+                this.rightScore = data.rscore;
+            }
         });
     }
 }
