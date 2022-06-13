@@ -72,20 +72,16 @@ export default class TitleScreen extends Phaser.Scene
             this.startGame();
         });
 
-        this.soc.on("saveData", (data: {
-            player: string,
-            is_player: boolean,
-            roomId: string
-        }) => {
+        this.soc.on("saveData", (data: { player: string, is_player: boolean, roomId: string } ) => 
+        {
             this.data = data;
-            this.startGame();
         });
     }
-
+    
     startGame() : void
     {
+        console.log(this.data);
         // loading a ball add sprite to the 
-        console.log(this.soc.data);
         this.posx = (this.data.player == "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
         this.eposx = (this.data.player != "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
         this.posy = ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3);
@@ -242,7 +238,7 @@ export default class TitleScreen extends Phaser.Scene
             });
         }
 
-        this.soc.on('recv', (data: any ) => {            
+        this.soc.on('recv', (data: any ) => {
             if (this.enemy.body)
             {
                 this.enemy.y = data.paddleY;
