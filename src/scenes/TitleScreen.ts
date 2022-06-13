@@ -1,4 +1,4 @@
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import Phaser from "phaser";
 import table from "../../assets/images/table.png";
 import paddle from "../../assets/images/paddle.png";
@@ -12,30 +12,22 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 600;
     bounds: number = 100;
-    textSize: number = 65;
-    leftScore: number = 0;
+    leftScore: number = 0 ;
     rightScore: number = 0;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite;
     ball: Phaser.Types.Physics.Arcade.ImageWithDynamicBody = null;
     paddle: Phaser.GameObjects.Sprite = null;
-    socket: any;
+    soc: any = null;
     enemy: Phaser.GameObjects.Sprite = null;
-;
     cursors: Phaser.Types.Input.Keyboard.CursorKeys = null;;
     leftScoretxt: Phaser.GameObjects.Text;
     rightScoretxt: Phaser.GameObjects.Text;
-    roomId: string = "";
-    admin: boolean = false;
-    old: {
-        bx: number,
-        by: number,
-        paddle: number
-    } = {
-        bx: 0,
-        by: 0,
-        paddle: 0 };
+    posx: number = 0;
+    eposx: number = 0;
+    posy: number = 0;
+    data: any = null;
     preload () : void
     {
         this.h = this.cameras.main.height;
@@ -54,11 +46,10 @@ export default class TitleScreen extends Phaser.Scene
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
         // const ser = http.createServer()
-        this.socket = io("http://127.0.0.1:3001/game", {withCredentials: true});
-        
-        this.socket.on("flag", () => {
-            this.admin = true;
-        });
+
+
+        if (!this.soc)
+            this.soc = io("http://127.0.0.1:3001/game", {withCredentials: true});
         
         // resize the images to fit the window
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
@@ -68,29 +59,41 @@ export default class TitleScreen extends Phaser.Scene
         
         /////////////////////////////// text ////////////////////////
         this.leftScoretxt = this.add.text((this.w / 2) - (this.w / 10) , 30, this.leftScore.toString(), {
-            font: this.textSize + "px Arial",
+            font:"65px Arial",
             align: "center"
         });
         
         this.rightScoretxt = this.add.text((this.w / 2) + (this.w / 10) , 30, this.rightScore.toString(), {
-            font: this.textSize + "px Arial",
+            font:"65px Arial",
             align: "center"
         });
         
-        this.socket.on("startGame", (room: any) => {
-            this.roomId = room;
+        this.soc.on("startGame", () => {
             this.startGame();
-        });  
+        });
+
+        this.soc.on("saveData", (data: {
+            player: string,
+            is_player: boolean,
+            roomId: string
+        }) => {
+            this.data = data;
+            this.startGame();
+        });
     }
 
     startGame() : void
     {
         // loading a ball add sprite to the 
+        console.log(this.soc.data);
+        this.posx = (this.data.player == "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
+        this.eposx = (this.data.player != "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
+        this.posy = ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3);
         this.createBall();
-        if (this.admin)
-            this.paddle = this.add.sprite(30, ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+        if (this.data.player == "player1")
+            this.paddle = this.add.sprite(this.posx, this.posy, 'paddle').setOrigin(0,0);
         else 
-            this.paddle = this.add.sprite((this.w - (145 * this.paddleScale) - 30) , ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+            this.paddle = this.add.sprite((this.w - (145 * this.paddleScale) - 30) , this.posy, 'paddle').setOrigin(0,0);
         this.paddle.setScale(this.paddleScale); // scale the sprit
         this.physics.add.existing(this.paddle, true); // set the physicss to paddle !!
         this.physics.add.collider(this.paddle, this.ball); // set the collider with paddle and the ball 
@@ -98,15 +101,15 @@ export default class TitleScreen extends Phaser.Scene
         this.createEnemy(this.paddle.width);
         // get the input from the user using "phaser-user-input-system"
 
-        this.cursors = this.input.keyboard.createCursorKeys();
+        this.cursors = (this.data.is_player) ? this.input.keyboard.createCursorKeys() : null;
     }
 
     createEnemy(w: number) : void
     {
-        if (this.admin)
-            this.enemy = this.add.sprite((this.w - (w * this.paddleScale) - 30) , ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+        if (this.data.player == "player1")
+            this.enemy = this.add.sprite((this.w - (w * this.paddleScale) - 30) , this.posy, 'paddle').setOrigin(0,0);
         else
-            this.enemy = this.add.sprite(30, ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3), 'paddle').setOrigin(0,0);
+            this.enemy = this.add.sprite(30, this.posy, 'paddle').setOrigin(0,0);
         this.enemy.setScale(this.paddleScale); // scale the sprit
         this.physics.add.existing(this.enemy, true); // set the physicss to paddle !!
         this.physics.add.collider(this.enemy, this.ball);
@@ -115,7 +118,7 @@ export default class TitleScreen extends Phaser.Scene
     resetball() : void
     {
         this.ball.setPosition(this.w / 2, this.h / 2)
-        if (this.admin)
+        if (this.data.player == "player1")
         {
             this.ball.setBounce(1, 1); // set the bounce effect to the ball 
             this.ball.setCollideWorldBounds(true, 1, 1); // set the bounce with world
@@ -134,32 +137,33 @@ export default class TitleScreen extends Phaser.Scene
         this.resetball();
     }
 
-    // updateScore(data: any) : void
-    // {
-    //     this.rightScoretxt.text = (this.rightScore != data.rscore) ? data.rscore.toString() :this.rightScoretxt.text;
-    //     this.leftScoretxt.text = (this.leftScore != data.lscore) ? data.lscore.toString() :this.leftScoretxt.text;
-    // }
-
     winner(img: string) : void
     {
-        this.ball.body.stop();
-        this.input.keyboard.enabled = false;
-        var sprite = this.add.sprite(this.w/2, this.h/2, 'restart').setInteractive();
-        sprite.on('pointerdown', () =>
-        {
-            this.input.keyboard.enabled = true;
-            this.leftScore = 0;
-            this.rightScore = 0;
-            this.scene.restart();
+        this.soc.emit('endGame', {
+            lscore: this.leftScore,
+            rscore: this.rightScore
         });
-        this.add.sprite(this.w/2, this.h/2 - sprite.height, img);
+        if (this.data.player == "player1")
+            this.ball.body.stop();
+        else
+            this.ball.setPosition(this.w / 2, this.h / 2)
+        this.input.keyboard.enabled = false;
+        
+        this.soc.on("Restart", () => {
+            this.add.sprite(this.w/2, this.h/2 - sprite.height, img);
+            var sprite = this.add.sprite(this.w/2, this.h/2, 'restart').setInteractive();
+            sprite.on('pointerdown', () =>
+            {
+                this.soc.emit('restart');
+            });
+        });
     }
 
     update () : void
     {
         if (this.rightScore >= 10 || this.leftScore >= 10)
         {
-            const msg: string = (this.leftScore >= 10 && this.admin) ? "youwin" : "youlose";
+            const msg: string = (this.leftScore >= 10 && this.data.player == "player1") ? "youwin" : "youlose";
             this.winner(msg);
         }
         if (this.cursors && this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
@@ -178,14 +182,19 @@ export default class TitleScreen extends Phaser.Scene
                 this.paddle.body.updateFromGameObject();
             }
         }
-        if (this.admin && this.ball && this.ball.x < 0)
+        if (this.ball && this.ball.x < 0)
         {
             /// add score to left user
             /******************* update the position of the paddle ************************/
-            // this.paddle.setPosition( 30, ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3));
-            // if('updateFromGameObject' in this.paddle.body) {
-            //     this.paddle.body.updateFromGameObject();
-            // }
+            this.paddle.setPosition( 30, this.posy);
+            if('updateFromGameObject' in this.paddle.body) {
+                this.paddle.body.updateFromGameObject();
+            }
+
+            this.enemy.setPosition( this.eposx, this.posy);
+            if('updateFromGameObject' in this.enemy.body) {
+                this.enemy.body.updateFromGameObject();
+            }
             /******************************************************************************/
         
             /******************* add score for the leftUser *******************************/
@@ -198,15 +207,18 @@ export default class TitleScreen extends Phaser.Scene
             /******************************************************************************/
     
         }
-        else if (this.admin && this.ball && this.ball.x > this.w)
+        else if (this.ball && this.ball.x > this.w)
         {
             /// add score to right user
-    
             /******************* update the position of the paddle ************************/
-            // this.paddle.setPosition( 30, ( ( (this.h / 2) - (this.h / 3) ) / 2) + (this.h / 3));
-            // if('updateFromGameObject' in this.paddle.body) {
-            //     this.paddle.body.updateFromGameObject();
-            // }
+            this.paddle.setPosition( this.posx, this.posy);
+            if('updateFromGameObject' in this.paddle.body) {
+                this.paddle.body.updateFromGameObject();
+            }
+            this.enemy.setPosition( this.eposx, this.posy);
+            if('updateFromGameObject' in this.enemy.body) {
+                this.enemy.body.updateFromGameObject();
+            }
             /******************************************************************************/
     
             /******************* add score for the leftUser *******************************/
@@ -220,24 +232,27 @@ export default class TitleScreen extends Phaser.Scene
         }
         if (this.ball)
         {
-            this.socket.emit('move', {
-                roomid: this.roomId,
+            this.soc.emit('move', {
+                roomid: this.data.roomId,
                 paddleY: this.paddle.y,
-                ballx: this.ball.body.x,
-                bally: this.ball.body.y,
+                ballx: (this.ball.body) ? this.ball.body.x: 0,
+                bally: (this.ball.body) ? this.ball.body.y: 0,
                 lscore: this.leftScore,
                 rscore: this.rightScore,
             });
         }
 
-        this.socket.on('recv', (data: any ) => {            
-            this.enemy.y = data.paddleY;
-            if('updateFromGameObject' in this.enemy.body) {
-                this.enemy.body.updateFromGameObject();
+        this.soc.on('recv', (data: any ) => {            
+            if (this.enemy.body)
+            {
+                this.enemy.y = data.paddleY;
+                if('updateFromGameObject' in this.enemy.body) {
+                    this.enemy.body.updateFromGameObject();
+                }
             }
-            this.ball.x = (!this.admin) ? data.ballx : this.ball.x;
-            this.ball.y = (!this.admin) ? data.bally : this.ball.y;
-            if (!this.admin)
+            this.ball.x = (this.data.player == "player2") ? data.ballx : this.ball.x;
+            this.ball.y = (this.data.player == "player2") ? data.bally : this.ball.y;
+            if (this.data.player == "player2")
             {
                 this.rightScoretxt.text = data.rscore.toString();
                 this.leftScoretxt.text = data.lscore.toString();
