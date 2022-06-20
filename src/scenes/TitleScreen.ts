@@ -1,4 +1,3 @@
-import { io } from "socket.io-client";
 import Phaser from "phaser";
 import table from "../../assets/images/table.png";
 import paddle from "../../assets/images/paddle.png";
@@ -6,6 +5,7 @@ import ball from "../../assets/images/ball.png";
 import restartButton from "../../assets/images/restartButton.png";
 import youlose from "../../assets/images/youlose.png";
 import youwin from "../../assets/images/youwin.png";
+import { io, Socket } from "socket.io-client";
 export default class TitleScreen extends Phaser.Scene
 {
     ballScale: number = 0.19;
@@ -16,19 +16,25 @@ export default class TitleScreen extends Phaser.Scene
     rightScore: number = 8;
     h: number = 0;
     w: number = 0;
-    bg: Phaser.GameObjects.Sprite;
+    bg: Phaser.GameObjects.Sprite = null;
     ball: Phaser.Types.Physics.Arcade.ImageWithDynamicBody = null;
     paddle: Phaser.GameObjects.Sprite = null;
-    soc: any = null;
+    soc: Socket = null;
     enemy: Phaser.GameObjects.Sprite = null;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys = null;;
-    leftScoretxt: Phaser.GameObjects.Text;
-    rightScoretxt: Phaser.GameObjects.Text;
+    cursors: Phaser.Types.Input.Keyboard.CursorKeys = null;
+    status: Phaser.GameObjects.Image = null;
+    leftScoretxt: Phaser.GameObjects.Text = null;
+    rightScoretxt: Phaser.GameObjects.Text = null;
     posx: number = 0;
     eposx: number = 0;
     posy: number = 0;
+    restart: boolean = true;
     data: any = null;
     End: boolean = false;
+    sprite : any = null;
+    re: boolean = false;
+    
+
     preload () : void
     {
         this.h = this.cameras.main.height;
@@ -43,21 +49,19 @@ export default class TitleScreen extends Phaser.Scene
 
     create() : void
     {
+        console.log("-------- begging !!!! ---- " );
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
         // const ser = http.createServer()
 
-
         if (!this.soc)
             this.soc = io("http://127.0.0.1:3001/game", {withCredentials: true});
-        
+
         // resize the images to fit the window
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
         
-        
         // add the paddle 
-        
         /////////////////////////////// text ////////////////////////
         this.leftScoretxt = this.add.text((this.w / 2) - (this.w / 10) , 30, this.leftScore.toString(), {
             font:"65px Arial",
@@ -69,40 +73,82 @@ export default class TitleScreen extends Phaser.Scene
             align: "center"
         });
         
+        this.soc.on("saveData", (data: { player: string, is_player: boolean, roomId: string } ) => 
+        {
+            this.data = data;
+            console.log(this.data);
+        });
+        
         this.soc.on("startGame", () => {
-            console.log("---------------------------------- ");
+            
             this.startGame();
         });
         this.soc.on("restartGame", () => {
-
-            console.log("restart Game is Called ");
+            console.log("restartGame Called!! ");
             this.leftScore = 8;
             this.rightScore = 8;
             this.rightScoretxt.text = this.leftScore.toString();
             this.leftScoretxt.text = this.leftScore.toString();
             this.End = false;
             if (this.data.is_player)
-            {
-                this.input.keyboard.enabled = true;
-                this.startGame();
-            }
+            this.input.keyboard.enabled = true;
+            this.startGame();
         });
-
-        this.soc.on("saveData", (data: { player: string, is_player: boolean, roomId: string } ) => 
+        
+        this.soc.on("newRoom", (id: string) => 
         {
-            this.data = data;
-        });
-
-        this.soc.on("join", (id: string) => 
-        {
-            this.soc.emit("join", {
+            this.soc.emit("joinNewRoom", {
                 oldData: this.data,
                 newRoom: id
             });
             this.data.roomId = id;
         });
+        this.soc.on("restart", (img) => {
+            this.add.image(this.w/2, this.h/2, img);
+            const text = this.add.text(this.w / 2 , this.h / 2 , "Click to Restart", { font:"65px Arial", align: "center" }).setInteractive();
+            text.on('pointerdown', function ()
+            {
+                text.text = "";
+                this.soc.removeAllListeners();
+                this.re = true;
+                this.scene.restart();
+            }, this);
+
+        });
+
+        this.soc.on('recv', (data: 
+            {
+                roomid: string,
+                paddleY: number,
+                ballx: number,
+                bally: number,
+                lscore: number,
+                rscore: number,
+            }) => {
+            if (this.enemy && this.enemy.body)
+            {
+                this.enemy.y = data.paddleY;
+                if('updateFromGameObject' in this.enemy.body) {
+                    this.enemy.body.updateFromGameObject();
+                }
+            }
+            if (this.ball && this.data.player === "player2")
+            {
+                this.ball.x = data.ballx;
+                this.ball.y = data.bally;
+                this.rightScoretxt.text = data.rscore.toString();
+                this.leftScoretxt.text =  data.lscore.toString();
+                this.leftScore = data.lscore;
+                this.rightScore = data.rscore;
+            }
+        });
+        if (this.re)
+        {
+            this.re = false;
+            this.soc.emit('restart', this.data);
+        }
+
     }
-    
     startGame() : void
     {
         // loading a ball add sprite to the 
@@ -160,33 +206,20 @@ export default class TitleScreen extends Phaser.Scene
 
 
     winner(img: string) : void
-    {        
+    {
+        console.log("Winner Fonction Called");
         this.ball.destroy();
         this.paddle.destroy();
         this.enemy.destroy();
-        this.ball = null;
-        this.paddle = null;
-        this.enemy = null;
         this.input.keyboard.enabled = false;
-        
         this.soc.emit('endGame', {
             lscore: this.leftScore,
             rscore: this.rightScore,
             userId: this.data.userId,
             player: this.data.player,
-            roomId: this.data.roomId
-        });
-        
-        this.soc.on("restart", () => {
-            var sprite = this.add.image(this.w/2, this.h/2, 'restart').setInteractive();
-            var status = this.add.image(this.w/2, this.h/2 - sprite.height, img);
-            sprite.on('pointerdown', () =>
-            {
-                console.log("wwwww");
-                sprite.destroy();
-                status.destroy();
-                this.soc.emit('restart', this.data);
-            });
+            roomId: this.data.roomId,
+            status: img
+
         });
     }
 
@@ -263,7 +296,6 @@ export default class TitleScreen extends Phaser.Scene
         }
         if (!this.End && this.ball && this.paddle)
         {
-
             this.soc.emit('move', {
                 roomid: this.data.roomId,
                 paddleY: this.paddle.y,
@@ -273,25 +305,6 @@ export default class TitleScreen extends Phaser.Scene
                 rscore: this.rightScore,
             });
         }
-
-        this.soc.on('recv', (data: any ) => {
-            if (this.enemy && this.enemy.body)
-            {
-                this.enemy.y = data.paddleY;
-                if('updateFromGameObject' in this.enemy.body) {
-                    this.enemy.body.updateFromGameObject();
-                }
-            }
-            if (this.ball && this.data.player === "player2")
-            {
-                this.ball.x = data.ballx;
-                this.ball.y = data.bally;
-                this.rightScoretxt.text = data.rscore.toString();
-                this.leftScoretxt.text = data.lscore.toString();
-                this.leftScore = data.lscore;
-                this.rightScore = data.rscore;
-            }
-        });
     }
 }
 
