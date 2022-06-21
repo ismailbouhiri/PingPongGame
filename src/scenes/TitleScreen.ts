@@ -49,7 +49,6 @@ export default class TitleScreen extends Phaser.Scene
 
     create() : void
     {
-        console.log("-------- begging !!!! ---- " );
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
@@ -76,7 +75,6 @@ export default class TitleScreen extends Phaser.Scene
         this.soc.on("saveData", (data: { player: string, is_player: boolean, roomId: string } ) => 
         {
             this.data = data;
-            console.log(this.data);
         });
         
         this.soc.on("startGame", () => {
@@ -84,20 +82,19 @@ export default class TitleScreen extends Phaser.Scene
             this.startGame();
         });
         this.soc.on("restartGame", () => {
-            console.log("restartGame Called!! ");
             this.leftScore = 8;
             this.rightScore = 8;
             this.rightScoretxt.text = this.leftScore.toString();
             this.leftScoretxt.text = this.leftScore.toString();
             this.End = false;
             if (this.data.is_player)
-            this.input.keyboard.enabled = true;
+                this.input.keyboard.enabled = true;
             this.startGame();
         });
         
         this.soc.on("newRoom", (id: string) => 
         {
-            this.soc.emit("joinNewRoom", {
+            this.soc.emit("join", {
                 oldData: this.data,
                 newRoom: id
             });
@@ -193,7 +190,6 @@ export default class TitleScreen extends Phaser.Scene
             this.ball.body.setVelocity(angle, this.ballspeed); // set the velocity to the ball
         }
         // const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
-        // console.log(vec);//
     }
 
     createBall() : void 
@@ -207,7 +203,6 @@ export default class TitleScreen extends Phaser.Scene
 
     winner(img: string) : void
     {
-        console.log("Winner Fonction Called");
         this.ball.destroy();
         this.paddle.destroy();
         this.enemy.destroy();
