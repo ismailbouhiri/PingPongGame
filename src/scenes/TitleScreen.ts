@@ -33,7 +33,10 @@ export default class TitleScreen extends Phaser.Scene
     End: boolean = false;
     sprite : any = null;
     re: boolean = false;
-
+    text: Phaser.GameObjects.Text;
+    timedEvent: Phaser.Time.TimerEvent;
+    initialTime :number = 2;
+    goal: boolean = false;
     preload () : void
     {
         this.h = this.cameras.main.height;
@@ -148,6 +151,35 @@ export default class TitleScreen extends Phaser.Scene
         }
 
     }
+    formatTime(seconds:number){
+        // Minutes
+        var minutes = Math.floor(seconds/60);
+        // Seconds
+        var partInSeconds = seconds%60;
+        // Adds left zeros to seconds
+        var partInSecondsS = partInSeconds.toString().padStart(2,'0');
+        // Returns formated time
+        return `${minutes}:${partInSecondsS}`;
+    }
+
+    onEvent ()
+    {
+        if (this.timedEvent == undefined)
+            return ;
+        this.goal = true;
+        this.initialTime -= 1; // One second
+        this.text.setText('The Ball Will be Restart at: ' + this.formatTime(this.initialTime)).setOrigin(0.5);
+        if (this.initialTime <= 0)
+        {
+            this.goal = false;
+            this.timedEvent = undefined;
+            this.text.text = "";
+            this.createBall();
+            this.input.keyboard.enabled = true;
+            this.physics.add.collider(this.enemy, this.ball);
+            this.physics.add.collider(this.paddle, this.ball);
+        }
+    }
     startGame() : void
     {
         // loading a ball add sprite to the 
@@ -205,7 +237,8 @@ export default class TitleScreen extends Phaser.Scene
 
     winner(img: string) : void
     {
-        this.ball.destroy();
+        if (this.ball)
+            this.ball.destroy();
         this.paddle.destroy();
         this.enemy.destroy();
         this.input.keyboard.enabled = false;
@@ -231,8 +264,27 @@ export default class TitleScreen extends Phaser.Scene
         }
     }
     
+    goalTime()
+    {
+        this.input.keyboard.enabled = false;
+        this.updatePositions();
+        this.ball.destroy();
+        this.ball = null;
+        this.initialTime = 5;
+
+        this.text = this.add.text(this.w / 2, this.h / 2, 'The Ball Will be Restart at: ' + this.formatTime(this.initialTime), { font:"65px Arial", align: "center" }).setOrigin(0.5);
+        // Each 1000 ms call onEvent
+        this.timedEvent = this.time.addEvent({ delay: 1000, callback: this.onEvent, callbackScope: this, loop: true });
+
+    }
+
     update () : void
     {
+
+        if (this.goal)
+        {
+            return ;
+        }
         // ///// check For the  movment //////////////// 
         if (!this.End && this.cursors && this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
         {
@@ -261,39 +313,6 @@ export default class TitleScreen extends Phaser.Scene
         }
         //////////////////////////////////////////////////////////
         
-        //////       check For the goals    //////////
-        if (!this.End && this.ball && this.ball.x < 0)
-        {
-            /******************* update the position of the paddle ************************/
-            this.updatePositions();
-            /******************************************************************************/
-
-            /******************* add score for the leftUser *******************************/
-            this.rightScore += 1;
-            this.rightScoretxt.text = this.rightScore.toString();
-            /******************************************************************************/
-
-            /******************* update the position of the ball **************************/
-            this.resetball();
-            /******************************************************************************/
-        }
-        else if (!this.End && this.ball && this.ball.x > this.w)
-        {
-            /******************* update the position of the paddle ************************/
-            this.updatePositions();
-            /******************************************************************************/
-
-            /******************* add score for the leftUser *******************************/
-            this.leftScore += 1; 
-            this.leftScoretxt.text = this.leftScore.toString();
-            /******************************************************************************/
-
-            /******************* update the position of the ball **************************/
-            this.resetball();
-            /******************************************************************************/
-        }
-        ////////////////////////////////////////////
-
         // emit data to another player // 
         if (!this.End && this.ball && this.paddle)
         {
@@ -307,6 +326,44 @@ export default class TitleScreen extends Phaser.Scene
             });
         }
         //////////////////////////////////////////////
+        
+        //////       check For the goals    //////////
+        if (!this.End && this.ball && ((this.ball.x < 0) || 
+        ( this.data.player == "player2") &&( (this.ball.x - 10 ) > this.w )))
+        {
+            /******************* update the position of the paddle ************************/
+            this.updatePositions();
+            /******************************************************************************/
+            
+            /******************* add score for the leftUser *******************************/
+            this.rightScore += 1;
+            this.rightScoretxt.text = this.rightScore.toString();
+            /******************************************************************************/
+            
+            /******************* update the position of the ball **************************/
+            this.resetball();
+            /******************************************************************************/
+        }
+        else if (!this.End && this.ball && ((this.ball.x > this.w) || 
+            ( this.data.player == "player2") &&( (this.ball.x + 10 ) > this.w) )
+        )
+        {
+            /******************* update the position of the paddle ************************/
+            this.updatePositions();
+            /******************************************************************************/
+            
+            /******************* add score for the leftUser *******************************/
+            this.leftScore += 1; 
+            this.leftScoretxt.text = this.leftScore.toString();
+            /******************************************************************************/
+            
+            /******************* update the position of the ball **************************/
+            this.resetball();
+            /******************************************************************************/
+        
+        }
+        ////////////////////////////////////////////
+
 
     }
 }
