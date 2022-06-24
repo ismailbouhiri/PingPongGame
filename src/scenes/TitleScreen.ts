@@ -12,8 +12,8 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 600;
     bounds: number = 100;
-    leftScore: number = 0;
-    rightScore: number = 0;
+    leftScore: number = 6;
+    rightScore: number = 6;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -35,7 +35,7 @@ export default class TitleScreen extends Phaser.Scene
     re: boolean = false;
     text: Phaser.GameObjects.Text;
     timedEvent: Phaser.Time.TimerEvent;
-    initialTime :number = 2;
+    initialTime :number = 5;
     goal: boolean = false;
     preload () : void
     {
@@ -106,7 +106,7 @@ export default class TitleScreen extends Phaser.Scene
 
         this.soc.on("restart", (img) => {
             this.add.image(this.w/2, this.h/2, img);
-            const text = this.add.text(this.w / 2 , this.h / 2 , "Click to Restart", { font:"65px Arial", align: "center" }).setInteractive();
+            const text = this.add.text(this.w / 2 , this.h / 2 , "Click to Restart", { font:"65px Arial", align: "center" }).setInteractive().setOrigin(0.5);
             text.on('pointerdown', function ()
             {
                 text.text = "";
@@ -144,12 +144,14 @@ export default class TitleScreen extends Phaser.Scene
                 this.rightScore = data.rscore;
             }
         });
-        if (this.re)
+        if (this.re || this.leftScore > 9 || this.rightScore > 9)
         {
+            this.End = true;
             this.re = false;
             this.soc.emit('restart', this.data);
         }
-
+        if (!this.End && this.goal && !this.re && (this.leftScore || this.rightScore))
+            this.goalTime();
     }
     formatTime(seconds:number){
         // Minutes
@@ -166,18 +168,17 @@ export default class TitleScreen extends Phaser.Scene
     {
         if (this.timedEvent == undefined)
             return ;
-        this.goal = true;
         this.initialTime -= 1; // One second
-        this.text.setText('The Ball Will be Restart at: ' + this.formatTime(this.initialTime)).setOrigin(0.5);
+        this.text.setText('' + this.formatTime(this.initialTime)).setOrigin(0.5);
         if (this.initialTime <= 0)
         {
             this.goal = false;
             this.timedEvent = undefined;
             this.text.text = "";
-            this.createBall();
-            this.input.keyboard.enabled = true;
-            this.physics.add.collider(this.enemy, this.ball);
-            this.physics.add.collider(this.paddle, this.ball);
+            this.startGame();
+            // this.createBall();
+            // this.physics.add.collider(this.enemy, this.ball);
+            // this.physics.add.collider(this.paddle, this.ball);
         }
     }
     startGame() : void
@@ -249,15 +250,20 @@ export default class TitleScreen extends Phaser.Scene
             player: this.data.player,
             roomId: this.data.roomId,
             status: img
-
         });
+        this.rightScore = 0;
+        this.rightScoretxt.text = this.rightScore.toString();
+        this.leftScore = 0; 
+        this.leftScoretxt.text = this.leftScore.toString();
     }
     updatePositions()
     {
+        console.log("Enemy Eposx = " + this.eposx + " || paddle posx : " + this.posx)   ;
         this.paddle.setPosition( this.posx, this.posy);
         if( this.paddle && this.paddle.body && 'updateFromGameObject' in this.paddle.body) {
             this.paddle.body.updateFromGameObject();
         }
+
         this.enemy.setPosition( this.eposx, this.posy);
         if(this.enemy && this.enemy.body && 'updateFromGameObject' in this.enemy.body) {
             this.enemy.body.updateFromGameObject();
@@ -266,25 +272,16 @@ export default class TitleScreen extends Phaser.Scene
     
     goalTime()
     {
-        this.input.keyboard.enabled = false;
-        this.updatePositions();
-        this.ball.destroy();
-        this.ball = null;
-        this.initialTime = 5;
-
-        this.text = this.add.text(this.w / 2, this.h / 2, 'The Ball Will be Restart at: ' + this.formatTime(this.initialTime), { font:"65px Arial", align: "center" }).setOrigin(0.5);
+        this.initialTime = 2;
+        this.text = this.add.text(this.w / 2, this.h / 2, '' + this.formatTime(this.initialTime), { font:"65px Arial", align: "center" }).setOrigin(0.5);
         // Each 1000 ms call onEvent
         this.timedEvent = this.time.addEvent({ delay: 1000, callback: this.onEvent, callbackScope: this, loop: true });
-
     }
 
     update () : void
     {
-
         if (this.goal)
-        {
             return ;
-        }
         // ///// check For the  movment //////////////// 
         if (!this.End && this.cursors && this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
         {
@@ -305,7 +302,7 @@ export default class TitleScreen extends Phaser.Scene
         /////////////////////////////////////////////////////////
 
         ///////////////////// check for the winner ///////////////
-        if ( !this.End && (this.rightScore >= 10 || this.leftScore >= 10))
+        if (!this.End && (this.rightScore >= 10 || this.leftScore >= 10))
         {
             this.End = true;
             const msg = (this.leftScore >= 10 && this.data.player === "player1") ? "youwin" : "youlose";
@@ -328,11 +325,10 @@ export default class TitleScreen extends Phaser.Scene
         //////////////////////////////////////////////
         
         //////       check For the goals    //////////
-        if (!this.End && this.ball && ((this.ball.x < 0) || 
+        if ( !this.End && this.ball && ((this.ball.x < 0) || 
         ( this.data.player == "player2") &&( (this.ball.x - 10 ) > this.w )))
         {
             /******************* update the position of the paddle ************************/
-            this.updatePositions();
             /******************************************************************************/
             
             /******************* add score for the leftUser *******************************/
@@ -341,15 +337,20 @@ export default class TitleScreen extends Phaser.Scene
             /******************************************************************************/
             
             /******************* update the position of the ball **************************/
-            this.resetball();
             /******************************************************************************/
+            if (!this.End)
+            {
+                this.goal = true;
+                this.soc.removeAllListeners();
+                this.scene.restart();
+            }
+        
         }
         else if (!this.End && this.ball && ((this.ball.x > this.w) || 
             ( this.data.player == "player2") &&( (this.ball.x + 10 ) > this.w) )
         )
         {
             /******************* update the position of the paddle ************************/
-            this.updatePositions();
             /******************************************************************************/
             
             /******************* add score for the leftUser *******************************/
@@ -358,13 +359,15 @@ export default class TitleScreen extends Phaser.Scene
             /******************************************************************************/
             
             /******************* update the position of the ball **************************/
-            this.resetball();
             /******************************************************************************/
-        
+            if (!this.End)
+            {
+                this.goal = true;
+                this.soc.removeAllListeners();
+                this.scene.restart();
+            }
         }
         ////////////////////////////////////////////
-
-
     }
 }
 
