@@ -216,13 +216,15 @@ export default class TitleScreen extends Phaser.Scene
         this.ball.setPosition(this.w / 2, this.h / 2)
         if (this.data.player === "player1")
         {
+            const arr= [45, -45, 135, -135];
+            const ran = Phaser.Math.Between(0, 3);
             this.ball.setBounce(1, 1); // set the bounce effect to the ball 
             this.ball.setCollideWorldBounds(true, 1, 1); // set the bounce with world
-            const angle = Phaser.Math.Between(250, 360);
-            const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
-            console.log(vec);
+            const vec = this.physics.velocityFromAngle(arr[ran], this.ballspeed);
+            console.log (ran);
             this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
-        }
+            this.physics.accelerateTo(this.ball, this.ball.x, this.ball.y, 100);
+            }
     }
 
     createBall() : void 
@@ -250,7 +252,6 @@ export default class TitleScreen extends Phaser.Scene
     }
     updatePositions()
     {
-        console.log("Enemy Eposx = " + this.eposx + " || paddle posx : " + this.posx)   ;
         this.paddle.setPosition( this.posx, this.posy);
         if( this.paddle && this.paddle.body && 'updateFromGameObject' in this.paddle.body) {
             this.paddle.body.updateFromGameObject();
@@ -319,7 +320,6 @@ export default class TitleScreen extends Phaser.Scene
         if ( !this.End && this.ball && ((this.ball.x < 0) || 
             ( this.data.player == "player2") &&( (this.ball.x - 20 ) < 0 )))
         {
-            console.log("RScore : " + this.ball.x);
             /******************* add score for the leftUser *******************************/
             this.rightScore += 1;
             this.rightScoretxt.text = this.rightScore.toString();
@@ -336,9 +336,6 @@ export default class TitleScreen extends Phaser.Scene
         else if (!this.End && this.ball && ((this.ball.x > this.w) || 
             ( this.data.player == "player2") &&( (this.ball.x + 20 ) > this.w) ))
         {
-
-            console.log("LScore : " + this.ball.x);
-
             /******************* update the position of the paddle ************************/
             /******************************************************************************/
             
