@@ -10,10 +10,10 @@ export default class TitleScreen extends Phaser.Scene
 {
     ballScale: number = 0.19;
     paddleScale: number = 0.4;
-    ballspeed: number = 600;
+    ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 6;
-    rightScore: number = 6;
+    leftScore: number = 0;
+    rightScore: number = 0;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -124,8 +124,6 @@ export default class TitleScreen extends Phaser.Scene
                 paddleY: number,
                 ballx: number,
                 bally: number,
-                lscore: number,
-                rscore: number,
             }) => {
             
             if (this.enemy && this.enemy.body)
@@ -139,10 +137,6 @@ export default class TitleScreen extends Phaser.Scene
             {
                 this.ball.x = data.ballx;
                 this.ball.y = data.bally;
-                // this.rightScoretxt.text = data.rscore.toString();
-                // this.leftScoretxt.text =  data.lscore.toString();
-                // this.leftScore = data.lscore;
-                // this.rightScore = data.rscore;
             }
         });
         if (this.re)
@@ -153,7 +147,7 @@ export default class TitleScreen extends Phaser.Scene
         else if (!this.End && (this.rightScore >= 10 || this.leftScore >= 10))
         {
             this.End = true;
-            const msg = (this.leftScore >= 10 && this.data.player === "player1") ? "youwin" : "youlose";
+            const msg = ((this.leftScore >= 10 && this.data.player === "player1") || (this.rightScore >= 10 && this.data.player === "player2")) ? "youwin" : "youlose";
             this.winner(msg);
         }
         else if  (!this.End && this.goal && !this.re && (this.leftScore || this.rightScore))
@@ -224,10 +218,11 @@ export default class TitleScreen extends Phaser.Scene
         {
             this.ball.setBounce(1, 1); // set the bounce effect to the ball 
             this.ball.setCollideWorldBounds(true, 1, 1); // set the bounce with world
-            const angle = Phaser.Math.Between(400, 1000);
-            this.ball.body.setVelocity(angle, this.ballspeed); // set the velocity to the ball
+            const angle = Phaser.Math.Between(250, 360);
+            const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
+            console.log(vec);
+            this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
         }
-        // const vec = this.physics.velocityFromAngle(angle, this.ballspeed);
     }
 
     createBall() : void 
@@ -247,8 +242,6 @@ export default class TitleScreen extends Phaser.Scene
         this.enemy.destroy();
         this.input.keyboard.enabled = false;
         this.soc.emit('endGame', {
-            lscore: this.leftScore,
-            rscore: this.rightScore,
             userId: this.data.userId,
             player: this.data.player,
             roomId: this.data.roomId,
@@ -304,7 +297,7 @@ export default class TitleScreen extends Phaser.Scene
         if (!this.End && (this.rightScore >= 10 || this.leftScore >= 10))
         {
             this.End = true;
-            const msg = (this.leftScore >= 10 && this.data.player === "player1") ? "youwin" : "youlose";
+            const msg = ((this.leftScore >= 10 && this.data.player === "player1") || (this.rightScore >= 10 && this.data.player === "player2")) ? "youwin" : "youlose";
             this.winner(msg);
         }
         //////////////////////////////////////////////////////////
@@ -317,8 +310,6 @@ export default class TitleScreen extends Phaser.Scene
                 paddleY: this.paddle.y,
                 ballx: (this.ball.body) ? this.ball.body.x: 0,
                 bally: (this.ball.body) ? this.ball.body.y: 0,
-                lscore: this.leftScore,
-                rscore: this.rightScore,
             });
             // console.log("send");
         }
@@ -326,9 +317,9 @@ export default class TitleScreen extends Phaser.Scene
         
         //////       check For the goals    //////////
         if ( !this.End && this.ball && ((this.ball.x < 0) || 
-            ( this.data.player == "player2") &&( (this.ball.x - 10 ) > this.w )))
+            ( this.data.player == "player2") &&( (this.ball.x - 20 ) < 0 )))
         {
-            console.log("rgoal");
+            console.log("RScore : " + this.ball.x);
             /******************* add score for the leftUser *******************************/
             this.rightScore += 1;
             this.rightScoretxt.text = this.rightScore.toString();
@@ -343,9 +334,10 @@ export default class TitleScreen extends Phaser.Scene
             
         }
         else if (!this.End && this.ball && ((this.ball.x > this.w) || 
-            ( this.data.player == "player2") &&( (this.ball.x + 10 ) > this.w) ))
+            ( this.data.player == "player2") &&( (this.ball.x + 20 ) > this.w) ))
         {
-            console.log("lgoal");
+
+            console.log("LScore : " + this.ball.x);
 
             /******************* update the position of the paddle ************************/
             /******************************************************************************/
