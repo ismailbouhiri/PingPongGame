@@ -12,8 +12,8 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 0;
-    rightScore: number = 0;
+    leftScore: number = 9;
+    rightScore: number = 9;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -80,7 +80,6 @@ export default class TitleScreen extends Phaser.Scene
         });
         
         this.soc.on("startGame", () => {
-            console.log(this.data);
             this.startGame();
         });
         this.soc.on("restartGame", () => {
@@ -103,7 +102,16 @@ export default class TitleScreen extends Phaser.Scene
             });
             this.data.roomId = id;
         });
+        this.soc.on("leave", () => {
+            console.log("The Client is Disconnected !! ");
+            this.soc.disconnect();
+            this.scene.stop();
+        });
 
+        this.soc.on("disconnect", () => 
+        {
+            console.log("UserDisconnected");
+        })
 
         this.soc.on("restart", (img) => {
             this.add.image(this.w/2, this.h/2 - 100, img).setOrigin(0.5);
@@ -221,7 +229,6 @@ export default class TitleScreen extends Phaser.Scene
             this.ball.setBounce(1, 1); // set the bounce effect to the ball 
             this.ball.setCollideWorldBounds(true, 1, 1); // set the bounce with world
             const vec = this.physics.velocityFromAngle(arr[ran], this.ballspeed);
-            console.log (ran);
             this.ball.body.setVelocity(vec.x, vec.y); // set the velocity to the ball
             this.physics.accelerateTo(this.ball, this.ball.x, this.ball.y, 100);
             }
@@ -312,7 +319,6 @@ export default class TitleScreen extends Phaser.Scene
                 ballx: (this.ball.body) ? this.ball.body.x: 0,
                 bally: (this.ball.body) ? this.ball.body.y: 0,
             });
-            // console.log("send");
         }
         //////////////////////////////////////////////
         
