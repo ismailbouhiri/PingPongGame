@@ -12,8 +12,8 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 9;
-    rightScore: number = 9;
+    leftScore: number = 0;
+    rightScore: number = 0;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -47,6 +47,11 @@ export default class TitleScreen extends Phaser.Scene
         this.load.image('restart', restartButton);
         this.load.image('youwin', youwin);
         this.load.image('youlose', youlose);
+    }
+    
+    watcherRender()
+    {
+
     }
 
     create() : void
@@ -102,16 +107,23 @@ export default class TitleScreen extends Phaser.Scene
             });
             this.data.roomId = id;
         });
+
         this.soc.on("leave", () => {
             console.log("The Client is Disconnected !! ");
+            if (this.data)
+            {
+                this.soc.emit('move', {
+                    roomid: this.data.roomId,
+                    paddleY: this.paddle.y,
+                    ballx: (this.ball.body) ? this.ball.body.x: 0,
+                    bally: (this.ball.body) ? this.ball.body.y: 0,
+                    lScore: 10,
+                    rScore: 10
+                });
+            }
             this.soc.disconnect();
             this.scene.stop();
         });
-
-        this.soc.on("disconnect", () => 
-        {
-            console.log("UserDisconnected");
-        })
 
         this.soc.on("restart", (img) => {
             this.add.image(this.w/2, this.h/2 - 100, img).setOrigin(0.5);
@@ -161,6 +173,7 @@ export default class TitleScreen extends Phaser.Scene
         else if  (!this.End && this.goal && !this.re && (this.leftScore || this.rightScore))
             this.goalTime();
     }
+
     formatTime(seconds:number){
         // Minutes
         var minutes = Math.floor(seconds/60);
@@ -186,6 +199,7 @@ export default class TitleScreen extends Phaser.Scene
             this.startGame();
         }
     }
+
     startGame() : void
     {
         // loading a ball add sprite to the 
@@ -318,6 +332,8 @@ export default class TitleScreen extends Phaser.Scene
                 paddleY: this.paddle.y,
                 ballx: (this.ball.body) ? this.ball.body.x: 0,
                 bally: (this.ball.body) ? this.ball.body.y: 0,
+                lScore: this.leftScore,
+                rScore :this.rightScore
             });
         }
         //////////////////////////////////////////////
