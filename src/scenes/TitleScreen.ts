@@ -37,6 +37,7 @@ export default class TitleScreen extends Phaser.Scene
     timedEvent: Phaser.Time.TimerEvent;
     initialTime :number = 5;
     goal: boolean = false;
+    gameIsStarted: boolean = false;
     
     preload () : void
     {
@@ -246,6 +247,7 @@ export default class TitleScreen extends Phaser.Scene
 
     startGame() : void
     {
+        this.gameIsStarted = true;
         // loading a ball add sprite to the 
         this.posx = (this.data.player === "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
         this.eposx = (this.data.player != "player1") ? 30: this.w - (145 * this.paddleScale) - 30 ;
@@ -338,7 +340,7 @@ export default class TitleScreen extends Phaser.Scene
 
     update () : void
     {
-        if (this.goal)
+        if (this.goal || !this.gameIsStarted)
             return ;
         // ///// check For the  movment //////////////// 
         if (this.data.is_player && !this.End && this.cursors && this.cursors.up.isDown && ( this.paddle.y - 10) >= 0)
@@ -362,6 +364,7 @@ export default class TitleScreen extends Phaser.Scene
         ///////////////////// check for the winner ///////////////
         if (this.data.is_player && !this.End && (this.rightScore >= 10 || this.leftScore >= 10))
         {
+            this.gameIsStarted = false;
             this.End = true;
             const msg = ((this.leftScore >= 10 && this.data.player === "player1") || (this.rightScore >= 10 && this.data.player === "player2")) ? "youwin" : "youlose";
             this.winner(msg);
