@@ -12,8 +12,8 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 0;
-    rightScore: number = 0;
+    leftScore: number = 9;
+    rightScore: number = 9;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -134,8 +134,8 @@ export default class TitleScreen extends Phaser.Scene
         });
 
         this.soc.on("restartGame", () => {
-            this.leftScore = 0;
-            this.rightScore = 0;
+            this.leftScore = 9;
+            this.rightScore = 9;
             this.rightScoretxt.text = this.leftScore.toString();
             this.leftScoretxt.text = this.leftScore.toString();
             this.End = false;
@@ -321,8 +321,10 @@ export default class TitleScreen extends Phaser.Scene
         this.enemy.destroy();
         this.input.keyboard.enabled = false;
         this.soc.emit('endGame', {
-            userId: this.data.userId,
             player: this.data.player,
+            rscore: this.rightScore,
+            lscore: this.leftScore, 
+            userId: this.data.userId,
             roomId: this.data.roomId,
             status: img
         });
