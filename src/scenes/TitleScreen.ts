@@ -5,6 +5,9 @@ import ball from "../../assets/images/ball.png";
 import restartButton from "../../assets/images/restartButton.png";
 import youlose from "../../assets/images/youlose.png";
 import youwin from "../../assets/images/youwin.png";
+import winner from "../../assets/images/Winner.png";
+import loser from "../../assets/images/Loser.png";
+import exit from "../../assets/images/Exit.png";
 import { io, Socket } from "socket.io-client";
 export default class TitleScreen extends Phaser.Scene
 {
@@ -12,8 +15,8 @@ export default class TitleScreen extends Phaser.Scene
     paddleScale: number = 0.4;
     ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 9;
-    rightScore: number = 9;
+    leftScore: number = 5;
+    rightScore: number = 5;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -38,12 +41,18 @@ export default class TitleScreen extends Phaser.Scene
     initialTime :number = 5;
     goal: boolean = false;
     gameIsStarted: boolean = false;
+    win: Phaser.GameObjects.Image;
+    lose: Phaser.GameObjects.Image;
+    exit: Phaser.GameObjects.Image;
     
     preload () : void
     {
         this.h = this.cameras.main.height;
         this.w = this.cameras.main.width;
         this.load.image('table', table);
+        this.load.image('loser', loser);
+        this.load.image('exit', exit);
+        this.load.image('winner', winner);
         this.load.image('ball', ball);
         this.load.image('paddle', paddle);
         this.load.image('restart', restartButton);
@@ -134,25 +143,37 @@ export default class TitleScreen extends Phaser.Scene
         });
 
         this.soc.on("restartGame", () => {
-            this.leftScore = 9;
-            this.rightScore = 9;
+            this.leftScore = 5;
+            this.rightScore = 5;
             this.rightScoretxt.text = this.leftScore.toString();
             this.leftScoretxt.text = this.leftScore.toString();
             this.End = false;
             this.goal = false;
             if (this.data.is_player)
+            {
                 this.input.keyboard.enabled = true;
-            this.startGame();
+                this.startGame();
+                return ;
+            }
+            this.createObjects(this.w / 2, this.h / 2, this.h / 2, this.h / 2);
         });
         
         this.soc.on("newRoom", (id: string) => 
         {
+            if (!this.data.is_player)
+            {
+                this.win.destroy();
+                this.lose.destroy();
+                this.exit.destroy();
+            }
+
             this.soc.emit("join", {
                 oldData: this.data,
                 newRoom: id
             });
             this.data.roomId = id;
         });
+
         this.soc.on("Watchers", (data: any) => 
         {
             if (!this.data || this.data.is_player)
@@ -175,6 +196,26 @@ export default class TitleScreen extends Phaser.Scene
             }
             this.soc.disconnect();
             this.scene.stop();
+        });
+
+        this.soc.on("watcherEndMatch", ()=> {
+            this.exit = this.add.image(this.w / 2 , this.h / 2 , 'exit').setInteractive().setOrigin(0.5);
+            this.exit.on('pointerdown', function () {
+                this.soc.disconnect();
+                this.scene.stop();
+            }, this);
+
+            let right = this.w - (this.w / 4);
+            let left = this.w / 4;
+            if (this.rightScore == 10)
+            {
+                this.win = this.add.image(right, this.h/2, "winner").setOrigin(0.5, 0.5).setScale(0.45);
+                this.lose = this.add.image(left, this.h/2, "loser").setOrigin(0.5);
+                return ;
+            }
+            this.win = this.add.image(left, this.h/2, "winner").setOrigin(0.5, 0.5).setScale(0.45);
+            this.lose = this.add.image(right, this.h/2, "loser").setOrigin(0.5);
+
         });
 
         this.soc.on("restart", (img) => {
@@ -218,6 +259,7 @@ export default class TitleScreen extends Phaser.Scene
         }
         else if (!this.End && (this.rightScore >= 10 || this.leftScore >= 10))
         {
+            this.gameIsStarted = false;
             this.End = true;
             const msg = ((this.leftScore >= 10 && this.data.player === "player1") || (this.rightScore >= 10 && this.data.player === "player2")) ? "youwin" : "youlose";
             this.winner(msg);
@@ -373,15 +415,6 @@ export default class TitleScreen extends Phaser.Scene
         }
         /////////////////////////////////////////////////////////
 
-        ///////////////////// check for the winner ///////////////
-        if (this.data.is_player && !this.End && (this.rightScore >= 10 || this.leftScore >= 10))
-        {
-            this.gameIsStarted = false;
-            this.End = true;
-            const msg = ((this.leftScore >= 10 && this.data.player === "player1") || (this.rightScore >= 10 && this.data.player === "player2")) ? "youwin" : "youlose";
-            this.winner(msg);
-        }
-        //////////////////////////////////////////////////////////
         
         // emit data to another player // 
         if (this.data.is_player && !this.End && this.ball && this.paddle)
