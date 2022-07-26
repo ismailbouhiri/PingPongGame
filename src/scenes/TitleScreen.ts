@@ -44,7 +44,13 @@ export default class TitleScreen extends Phaser.Scene
     win: Phaser.GameObjects.Image;
     lose: Phaser.GameObjects.Image;
     exit: Phaser.GameObjects.Image;
-    
+    constructor(msoc: Socket)
+    {
+        console.log(msoc);
+        super("");
+        this.soc = msoc;
+    };
+
     preload () : void
     {
         this.h = this.cameras.main.height;
@@ -115,9 +121,6 @@ export default class TitleScreen extends Phaser.Scene
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
-        if (!this.soc)
-            this.soc = io("http://127.0.0.1:3001/game", {withCredentials: true});
-
         // resize the images to fit the window
         this.bg = this.add.sprite(this.w / 2, this.h / 2, 'table');
                 
@@ -252,6 +255,7 @@ export default class TitleScreen extends Phaser.Scene
                 this.ball.y = data.bally;
             }
         });
+    
         if (this.re)
         {
             this.re = false;
@@ -266,6 +270,7 @@ export default class TitleScreen extends Phaser.Scene
         }
         else if  (!this.End && this.goal && !this.re && (this.leftScore || this.rightScore))
             this.goalTime();
+        
     }
 
     formatTime(seconds:number){

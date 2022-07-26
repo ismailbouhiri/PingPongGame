@@ -1,3 +1,4 @@
+import { io, Socket } from "socket.io-client";
 import Phaser from "phaser"
 import TitleScreen from "./scenes/TitleScreen"
 
@@ -36,5 +37,9 @@ var config: {
 }
 
 var game: Phaser.Game = new Phaser.Game(config);
-game.scene.add("titlescreen", TitleScreen);
+
+var soc: Socket = io("http://127.0.0.1:3001/privateGame", {withCredentials: true});
+var scene: TitleScreen = new TitleScreen(soc);
+
+game.scene.add("titlescreen", scene);
 game.scene.start("titlescreen");
