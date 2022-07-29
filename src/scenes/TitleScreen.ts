@@ -8,15 +8,15 @@ import youwin from "../../assets/images/youwin.png";
 import winner from "../../assets/images/Winner.png";
 import loser from "../../assets/images/Loser.png";
 import exit from "../../assets/images/Exit.png";
-import { io, Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 export default class TitleScreen extends Phaser.Scene
 {
     ballScale: number = 0.19;
     paddleScale: number = 0.4;
     ballspeed: number = 800;
     bounds: number = 100;
-    leftScore: number = 5;
-    rightScore: number = 5;
+    leftScore: number = 0;
+    rightScore: number = 0;
     h: number = 0;
     w: number = 0;
     bg: Phaser.GameObjects.Sprite = null;
@@ -44,10 +44,14 @@ export default class TitleScreen extends Phaser.Scene
     win: Phaser.GameObjects.Image;
     lose: Phaser.GameObjects.Image;
     exit: Phaser.GameObjects.Image;
-    constructor(msoc: Socket)
+    waiting: Phaser.GameObjects.Text;
+    leave: Phaser.GameObjects.Text;
+    type: string;
+    constructor(msoc: Socket, type:string)
     {
-        console.log(msoc);
+
         super("");
+        this.type = type;
         this.soc = msoc;
     };
 
@@ -118,6 +122,9 @@ export default class TitleScreen extends Phaser.Scene
 
     create() : void
     {
+        console.log(this.soc);
+        console.log(this.type);
+
         // no collision detection on left side and right side 
         this.physics.world.setBounds(-this.bounds, 0, this.w + (this.bounds * 2), this.h);
         
@@ -137,7 +144,11 @@ export default class TitleScreen extends Phaser.Scene
         
         this.soc.on("saveData", (data: { player: string, is_player: boolean, roomId: string, userId: string } ) => 
         {
-            console.log(data);
+            if (data.player == "player1")
+            {
+                this.leave.destroy();
+                this.waiting.destroy();
+            }
             this.data = data;
         });
         
@@ -145,9 +156,22 @@ export default class TitleScreen extends Phaser.Scene
             this.startGame();
         });
 
+        this.soc.on("waiting", () => {
+
+            this.waiting = this.add.text(this.w / 2 , this.h / 2 , "Waiting ...", { font:"35px Arial", align: "center" }).setOrigin(0.5);
+            this.leave = this.add.text(this.w - 190 , this.h - 100 , "leave the queue", { font:"35px Arial", align: "center" }).setInteractive().setOrigin(0.5);
+            this.leave.on('pointerdown', function ()
+            {
+                this.leave.text = "";
+                this.soc.disconnect();
+                this.scene.stop();
+            }, this);
+
+        });
+
         this.soc.on("restartGame", () => {
-            this.leftScore = 5;
-            this.rightScore = 5;
+            this.leftScore = 0;
+            this.rightScore = 0;
             this.rightScoretxt.text = this.leftScore.toString();
             this.leftScoretxt.text = this.leftScore.toString();
             this.End = false;
@@ -255,7 +279,8 @@ export default class TitleScreen extends Phaser.Scene
                 this.ball.y = data.bally;
             }
         });
-    
+        if (!this.gameIsStarted && !this.re)
+            this.soc.emit(this.type);
         if (this.re)
         {
             this.re = false;

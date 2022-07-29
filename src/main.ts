@@ -39,7 +39,7 @@ var config: {
 var game: Phaser.Game = new Phaser.Game(config);
 
 var soc: Socket = io("http://127.0.0.1:3001/game", {withCredentials: true});
-var scene: TitleScreen = new TitleScreen(soc);
+var scene: TitleScreen = new TitleScreen(soc, "normaleQue");
 
 game.scene.add("titlescreen", scene);
 game.scene.start("titlescreen");
